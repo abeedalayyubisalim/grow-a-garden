@@ -3,39 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kebun 3D Third-Person</title>
+    <title>Kebun 3D</title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            user-select: none; 
+            background: white;
+        }
         #ui {
-            position: absolute; top: 10px; left: 10px; color: white;
-            background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px;
-            pointer-events: none; backdrop-filter: blur(4px);
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            color: #333;
+            background: rgba(255, 255, 255, 0.9); 
+            padding: 15px; 
+            border-radius: 8px;
+            pointer-events: none; 
+            backdrop-filter: blur(4px);
+            border: 2px solid #ddd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         #crosshair {
-            position: absolute; top: 50%; left: 50%; width: 12px; height: 12px;
-            background: rgba(255, 255, 255, 0.9); border: 2px solid black;
-            border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 10;
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            width: 12px; 
+            height: 12px;
+            background: rgba(0, 0, 0, 0.8); 
+            border: 2px solid white;
+            border-radius: 50%; 
+            transform: translate(-50%, -50%); 
+            pointer-events: none; 
+            z-index: 10;
         }
         #actions {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 15px; z-index: 20;
+            position: absolute; 
+            bottom: 30px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            display: flex; 
+            gap: 15px; 
+            z-index: 20;
         }
         .btn {
-            padding: 12px 24px; font-size: 16px; font-weight: bold; cursor: pointer;
-            background: #4CAF50; color: white; border: 2px solid #388E3C;
-            border-radius: 8px; transition: all 0.2s; pointer-events: auto;
+            padding: 12px 24px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer;
+            background: #4CAF50; 
+            color: white; 
+            border: none;
+            border-radius: 8px; 
+            transition: all 0.2s; 
+            pointer-events: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
-        .btn:hover { background: #45a049; transform: scale(1.05); }
-        .btn.active { background: #FF9800; border-color: #F57C00; }
+        .btn:hover { 
+            background: #45a049; 
+            transform: scale(1.05); 
+        }
+        .btn.active { 
+            background: #FF9800; 
+            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.4);
+        }
     </style>
 </head>
 <body>
     <div id="ui">
-        <h2 style="margin-top:0">🌱 Kebun 3D</h2>
+        <h2 style="margin-top:0; color: #2E7D32;">🌱 Kebun 3D</h2>
         <p>💰 Koin: <span id="coins">0</span></p>
         <p>🎮 WASD = Gerak | Mouse = Lihat</p>
-        <p>🖱️ Klik layar = Kunci mouse | ESC = Lepas</p>
-        <p>🔧 Aksi: <span id="currentAction" style="color: #FFD700; font-weight: bold;">Tanam</span></p>
+        <p>️ Klik layar = Kunci mouse | ESC = Lepas</p>
+        <p> Aksi: <span id="currentAction" style="color: #E65100; font-weight: bold;">Tanam</span></p>
     </div>
     
     <div id="crosshair"></div>
@@ -43,7 +84,7 @@
     <div id="actions">
         <button class="btn active" id="btn-plant">🌱 Tanam</button>
         <button class="btn" id="btn-water">💧 Siram</button>
-        <button class="btn" id="btn-harvest">🧺 Panen</button>
+        <button class="btn" id="btn-harvest"> Panen</button>
     </div>
 
     <script type="importmap">
@@ -61,4 +102,235 @@
 
         // --- KONFIGURASI SUPABASE ---
         const supabaseUrl = 'https://mlsibwihfzehqcdawrdh.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sc2lid2loZnplaHFjZGF3cmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxMTcwNTEsImV4cCI6MjEwMzY5MzA1MX0.fa
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sc2lid2loZnplaHFjZGF3cmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxMTcwNTEsImV4cCI6MjEwMzY5MzA1MX0.faKWNZqTLE6nEH6nPw0L4uFepTy6ZvqrZDy2BaHcWxs';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // --- VARIABEL GAME ---
+        let coins = 0;
+        let currentAction = 'plant';
+        const plots = [];
+        const keys = { w: false, a: false, s: false, d: false };
+        let cameraAngle = 0;
+        const moveSpeed = 0.15;
+
+        // --- SETUP THREE.JS ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xFFFFFF); // Background PUTIH
+        scene.fog = new THREE.Fog(0xFFFFFF, 10, 50); // Fog putih
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.setClearColor(0xFFFFFF); // Clear color putih
+        document.body.appendChild(renderer.domElement);
+
+        // Pencahayaan
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        scene.add(dirLight);
+
+        // Tanah - warna lebih terang
+        const groundGeo = new THREE.PlaneGeometry(50, 50);
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0xC8E6C9 }); // Hijau muda
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.1;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Karakter Pemain (Third-Person)
+        const player = new THREE.Group();
+        const bodyGeo = new THREE.CapsuleGeometry(0.3, 0.8, 4, 8);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1976D2 }); // Biru lebih gelap
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.position.y = 0.7; body.castShadow = true;
+        player.add(body);
+        
+        const headGeo = new THREE.SphereGeometry(0.25, 16, 16);
+        const headMat = new THREE.MeshStandardMaterial({ color: 0xFFCC80 });
+        const head = new THREE.Mesh(headGeo, headMat);
+        head.position.y = 1.3; head.castShadow = true;
+        player.add(head);
+        
+        player.position.set(0, 0, 4);
+        scene.add(player);
+
+        // --- LAHAN KEBUN (Grid 3x3) ---
+        const plotGeometry = new THREE.BoxGeometry(1.2, 0.2, 1.2);
+        const plotMaterial = new THREE.MeshStandardMaterial({ color: 0x8D6E63 }); // Coklat lebih terang
+        const plantGeometry = new THREE.ConeGeometry(0.3, 0.8, 8);
+
+        for(let x = -1; x <= 1; x++) {
+            for(let z = -1; z <= 1; z++) {
+                const plot = new THREE.Mesh(plotGeometry, plotMaterial.clone());
+                plot.position.set(x * 1.5, 0.1, z * 1.5);
+                plot.receiveShadow = true;
+                
+                plot.userData = { 
+                    id: (x + 1) * 3 + (z + 1), // ID 1 sampai 9
+                    plantType: null,
+                    growthStage: 0, // 0: kosong, 1: benih, 2: tumbuh, 3: siap panen
+                    lastWatered: null
+                };
+                
+                const plant = new THREE.Mesh(plantGeometry, new THREE.MeshStandardMaterial({ color: 0x90EE90 }));
+                plant.position.y = 0.5; plant.visible = false; plant.castShadow = true;
+                plot.add(plant);
+                plot.userData.plantMesh = plant;
+
+                scene.add(plot);
+                plots.push(plot);
+            }
+        }
+
+        // --- KONTROL & INTERAKSI ---
+        document.addEventListener('keydown', (e) => { if(keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = true; });
+        document.addEventListener('keyup', (e) => { if(keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = false; });
+
+        document.addEventListener('mousemove', (e) => {
+            if (document.pointerLockElement === document.body) {
+                cameraAngle -= e.movementX * 0.002;
+            }
+        });
+
+        document.body.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'BUTTON' && document.pointerLockElement !== document.body) {
+                document.body.requestPointerLock();
+            }
+        });
+
+        // Mencegah raycast saat klik tombol UI
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('mousedown', (e) => e.stopPropagation());
+            btn.addEventListener('click', (e) => {
+                currentAction = e.target.id.replace('btn-', '');
+                document.getElementById('currentAction').innerText = currentAction.charAt(0).toUpperCase() + currentAction.slice(1);
+                document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active'));
+            });
+        });
+
+        const raycaster = new THREE.Raycaster();
+        document.addEventListener('mousedown', (e) => {
+            if (document.pointerLockElement === document.body && e.button === 0) {
+                raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+                const intersects = raycaster.intersectObjects(plots);
+                if (intersects.length > 0) interactWithPlot(intersects[0].object);
+            }
+        });
+
+        // --- LOGIKA GAME ---
+        function updatePlantVisuals(plot) {
+            const data = plot.userData;
+            if (data.growthStage === 1) {
+                data.plantMesh.scale.set(0.4, 0.4, 0.4);
+                data.plantMesh.material.color.setHex(0x66BB6A); // Hijau muda
+            } else if (data.growthStage === 2) {
+                data.plantMesh.scale.set(0.7, 0.7, 0.7);
+                data.plantMesh.material.color.setHex(0x43A047); // Hijau daun
+            } else if (data.growthStage === 3) {
+                data.plantMesh.scale.set(1.0, 1.0, 1.0);
+                data.plantMesh.material.color.setHex(0xFF6F00); // Oranye (Siap panen)
+            }
+        }
+
+        async function interactWithPlot(plot) {
+            const data = plot.userData;
+            
+            if (currentAction === 'plant' && data.growthStage === 0) {
+                data.plantType = 'carrot';
+                data.growthStage = 1;
+                data.plantMesh.visible = true;
+                updatePlantVisuals(plot);
+                await updatePlotInDB(data);
+            } 
+            else if (currentAction === 'water' && data.growthStage >= 1 && data.growthStage < 3) {
+                data.growthStage = Math.min(data.growthStage + 1, 3);
+                data.lastWatered = new Date().toISOString();
+                updatePlantVisuals(plot);
+                await updatePlotInDB(data);
+            } 
+            else if (currentAction === 'harvest' && data.growthStage === 3) {
+                data.plantType = null;
+                data.growthStage = 0;
+                data.lastWatered = null;
+                data.plantMesh.visible = false;
+                coins += 10;
+                document.getElementById('coins').innerText = coins;
+                await updatePlotInDB(data);
+            } 
+        }
+
+        // --- SUPABASE INTEGRATION ---
+        async function loadGarden() {
+            const { data, error } = await supabase.from('garden_plots').select('*');
+            if (error) { console.error('Gagal memuat data kebun:', error); return; }
+            
+            if (data) {
+                data.forEach(dbPlot => {
+                    const plot = plots.find(p => p.userData.id === dbPlot.plot_index);
+                    if (plot && dbPlot.growth_stage > 0) {
+                        plot.userData.plantType = dbPlot.plant_type;
+                        plot.userData.growthStage = dbPlot.growth_stage;
+                        plot.userData.lastWatered = dbPlot.last_watered;
+                        plot.userData.plantMesh.visible = true;
+                        updatePlantVisuals(plot);
+                    }
+                });
+            }
+        }
+
+        async function updatePlotInDB(plotData) {
+            const { error } = await supabase.from('garden_plots').upsert({
+                plot_index: plotData.id,
+                plant_type: plotData.plantType,
+                growth_stage: plotData.growthStage,
+                last_watered: plotData.lastWatered
+            });
+            if (error) console.error('Gagal menyimpan data lahan:', error);
+        }
+
+        // --- GAME LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Pergerakan Pemain
+            const forward = new THREE.Vector3(Math.sin(cameraAngle), 0, Math.cos(cameraAngle));
+            const right = new THREE.Vector3(Math.sin(cameraAngle + Math.PI/2), 0, Math.cos(cameraAngle + Math.PI/2));
+
+            if (keys.w) player.position.addScaledVector(forward, moveSpeed);
+            if (keys.s) player.position.addScaledVector(forward, -moveSpeed);
+            if (keys.a) player.position.addScaledVector(right, -moveSpeed);
+            if (keys.d) player.position.addScaledVector(right, moveSpeed);
+
+            if (keys.w || keys.s || keys.a || keys.d) {
+                player.rotation.y = cameraAngle + Math.PI;
+            }
+
+            // Kamera Mengikuti Pemain (Third-Person)
+            camera.position.x = player.position.x + Math.sin(cameraAngle) * 5;
+            camera.position.y = player.position.y + 3.5;
+            camera.position.z = player.position.z + Math.cos(cameraAngle) * 5;
+            camera.lookAt(player.position.x, player.position.y + 1, player.position.z);
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Mulai Game
+        loadGarden();
+        animate();
+    </script>
+</body>
+</html>
