@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kebun 3D Third-Person</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+        #ui {
+            position: absolute; top: 10px; left: 10px; color: white;
+            background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px;
+            pointer-events: none; backdrop-filter: blur(4px);
+        }
+        #crosshair {
+            position: absolute; top: 50%; left: 50%; width: 12px; height: 12px;
+            background: rgba(255, 255, 255, 0.9); border: 2px solid black;
+            border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 10;
+        }
+        #actions {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 15px; z-index: 20;
+        }
+        .btn {
+            padding: 12px 24px; font-size: 16px; font-weight: bold; cursor: pointer;
+            background: #4CAF50; color: white; border: 2px solid #388E3C;
+            border-radius: 8px; transition: all 0.2s; pointer-events: auto;
+        }
+        .btn:hover { background: #45a049; transform: scale(1.05); }
+        .btn.active { background: #FF9800; border-color: #F57C00; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <h2 style="margin-top:0">🌱 Kebun 3D</h2>
+        <p>💰 Koin: <span id="coins">0</span></p>
+        <p>🎮 WASD = Gerak | Mouse = Lihat</p>
+        <p>🖱️ Klik layar = Kunci mouse | ESC = Lepas</p>
+        <p>🔧 Aksi: <span id="currentAction" style="color: #FFD700; font-weight: bold;">Tanam</span></p>
+    </div>
+    
+    <div id="crosshair"></div>
+    
+    <div id="actions">
+        <button class="btn active" id="btn-plant">🌱 Tanam</button>
+        <button class="btn" id="btn-water">💧 Siram</button>
+        <button class="btn" id="btn-harvest">🧺 Panen</button>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "@supabase/supabase-js": "https://unpkg.com/@supabase/supabase-js@2.39.3/dist/module/index.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { createClient } from '@supabase/supabase-js';
+
+        // --- KONFIGURASI SUPABASE ---
+        const supabaseUrl = 'https://mlsibwihfzehqcdawrdh.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sc2lid2loZnplaHFjZGF3cmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxMTcwNTEsImV4cCI6MjEwMzY5MzA1MX0.fa
